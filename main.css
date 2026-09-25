@@ -1,0 +1,81 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+}
+.fc {
+    display: flex;
+    flex-direction: column;
+}
+.fr {
+    display: flex;
+    flex-direction: row;
+}
+body {
+    background-color: #0a0a0a;
+
+}
+#calendar-header {
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+#calendar-header>* {
+    justify-content: center;
+    align-items: center;
+}
+h3 {
+    width: 20%;
+    margin: 10px 1%;
+    text-align: center;
+}
+.calendar-month-button {
+    color: hsl(216, 100%, 35%);
+    overflow: hidden;
+    width: 60px;
+    vertical-align: -2px;
+    font-size: 35px;
+    font-weight: 200;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+}
+.calendar-month-button:hover {
+    color: hsl(216, 100%, 55%);
+}
+.calendar-month-button:active {
+    color: gray;
+}
+#calendar-dategrid {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto auto;
+}
+.weekday-header {
+    font-size: small;
+    margin: 2px;
+    text-align: center;
+}
+.date-card {
+    position: relative;
+    margin: 5px;
+    border: 2px solid hsl(216, 100%, 35%);
+    border-radius: 5px;
+    aspect-ratio: 1;
+    background-color: rgb(24, 31, 49);
+    padding: 2px;
+}
+.date-card.unused {
+    border-color: hsl(216, 30%, 35%);
+}
+.date-card:not(.unused):hover {
+    background-color: hsl(223, 34%, 20%);
+    cursor: pointer;
+}
+.date-card:not(.unused).selected {
+    border-color: hsl(216, 100%, 55%);
+}
+.date-card>.date-card-date {
+    position: absolute;
+    margin: 0;
+    color: rgb(210,210,210);
+    font-size: small;
+}

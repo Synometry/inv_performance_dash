@@ -7,11 +7,34 @@
     <link rel="stylesheet" href="main.css">
     <script src="main.js" defer></script>
 </head>
-<body>
+<body class="fc">
     <div id="header">
     </div>
     <div id="content">
-        <div id="calendar"></div>
+        <div id="calendar">
+            <div id="calendar-header" class="fc">
+                <div id="calendar-header-year" class="fr">
+                    <h3 id="calendar-year"></h3>
+                </div>
+                <div id="calendar-header-month" class="fr">
+                    <button type="button" class="calendar-month-button" id="calendar-month-button-left">&#x1F844;</button>
+                    <h3 id="calendar-month"></h3>
+                    <button type="button" class="calendar-month-button" id="calendar-month-button-right">&#x1F846;</button>
+                </div>
+            </div>
+            <div id="calendar-dategrid">
+                <p class="weekday-header">Sun</p>
+                <p class="weekday-header">Mon</p>
+                <p class="weekday-header">Tue</p>
+                <p class="weekday-header">Wed</p>
+                <p class="weekday-header">Thu</p>
+                <p class="weekday-header">Fri</p>
+                <p class="weekday-header">Sat</p>
+                <div class="date-card">
+                    <p class="date-card-date"></p>
+                </div>
+            </div>
+        </div>
     </div>
     <div id="footer">
     </div>
