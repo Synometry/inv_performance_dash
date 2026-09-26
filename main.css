@@ -11,6 +11,8 @@
     flex-direction: row;
 }
 table {
+    width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
 }
 body {
@@ -86,6 +88,14 @@ h3 {
     background-color: hsl(252 31% 7% / 1);
     padding: 2px;
 }
+.date-card.positive {
+    border-color: hsl(160, 94%, 26%);
+    background-color: hsl(120, 31%, 7%);
+}
+.date-card.negative {
+    border-color: hsl(9, 94%, 26%);
+    background-color: hsl(5, 31%, 7%);
+}
 .date-card.unused {
     border-color: hsl(216, 30%, 35%);
 }
@@ -93,17 +103,57 @@ h3 {
     background-color: hsl(223, 34%, 20%);
     cursor: pointer;
 }
+.date-card.positive:not(.unused):hover {
+    background-color: hsl(110, 34%, 15%);
+    cursor: pointer;
+}
+.date-card.negative:not(.unused):hover {
+    background-color: hsl(7, 34%, 15%);
+    cursor: pointer;
+}
 .date-card:not(.unused).selected {
     border-color: hsl(216, 100%, 55%);
 }
-.date-card>.date-card-date {
+.date-card.positive:not(.unused).selected {
+    border-color: hsl(118, 100%, 55%);
+}
+.date-card.negative:not(.unused).selected {
+    border-color: hsl(0, 100%, 55%);
+}
+.date-card>* {
     position: absolute;
     margin: 0;
     color: rgb(210,210,210);
     font-size: small;
 }
+.date-card>.date-card-pgain {
+    font-size: 14px;
+    font-weight: bolder;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.date-card.positive>.date-card-pgain {
+    color:hsl(118, 100%, 45%);
+}
+.date-card.negative>.date-card-pgain {
+    color:hsl(0, 90%, 45%);
+}
+.date-card>.date-card-dgain {
+    font-size: 10px;
+    bottom: 1%;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+.date-card.positive>.date-card-dgain {
+    color:hsl(160, 94%, 35%);
+}
+.date-card.negative>.date-card-dgain {
+    color:hsl(4, 94%, 40%);
+}
 
-/* RECORDS */
+/* RECORD TABLE */
+
 #record-panel {
     flex: 1;
     margin: 8px;
@@ -154,9 +204,20 @@ h3 {
 #record-list th {
     border-bottom: 2px solid hsl(216, 100%, 35%);
 }
+#record-list th#col_id {
+    width: 65px;
+}
+#record-list th.col_T {
+    width: 70px;
+}
 #record-list th, #record-list tr {
     font-size: 12px;
     font-weight: normal;
+}
+th, td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 td {
     padding: 7px 0px;
@@ -178,10 +239,6 @@ tbody tr:hover {
     box-shadow: inset -10px 0px 0px 0px hsl(216, 100%, 35%), inset 10px 0px 0px 0px hsl(216, 100%, 35%);
 }
 /* TABLE INPUTS */
-/* input[type="time"]::-webkit-calendar-picker-indicator {
-    display: none;
-    -webkit-appearance: none;
-} */
 tr input {
     /* width: 10px; */
     text-align: right;

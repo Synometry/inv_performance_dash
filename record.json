@@ -1,20 +1,135 @@
 {
-    "initial_balance":2000,
+    "initial_balance": 2000,
     "trades": {
-        "2026-09-25": [
+        "2026-08-19": [
             {
-                "id":202609250,
+                "id": "202608190",
+                "entry_time": "6:30 AM",
+                "exit_time": "7:30 AM",
+                "entry": 224,
+                "exit": 200
+            }
+        ],
+        "2026-08-20": [
+            {
+                "id": "202608200",
+                "entry_time": "6:30 AM",
+                "exit_time": "6:45 AM",
+                "entry": 305,
+                "exit": 334
+            }
+        ],
+        "2026-08-24": [
+            {
+                "id": "202608240",
+                "entry_time": "6:30 AM",
+                "exit_time": "6:33 AM",
+                "entry": 265,
+                "exit": 280
+            }
+        ],
+        "2026-08-28": [
+            {
+                "id": "202608280",
+                "entry_time": "6:30 AM",
+                "exit_time": "7:07 AM",
+                "entry": 370,
+                "exit": 322
+            },
+            {
+                "id": "202608281",
+                "entry_time": "7:10 AM",
+                "exit_time": "7:13 AM",
+                "entry": 310,
+                "exit": 345
+            }
+        ],
+        "2026-08-31": [
+            {
+                "id": "202608310",
+                "entry_time": "6:30 AM",
+                "exit_time": "6:32 AM",
+                "entry": 290,
+                "exit": 298
+            },
+            {
+                "id": "202608311",
+                "entry_time": "6:35 AM",
+                "exit_time": "7:00 AM",
+                "entry": 276,
+                "exit": 230
+            }
+        ],
+        "2026-09-01": [
+            {
+                "id": "202609010",
+                "entry_time": "6:30 AM",
+                "exit_time": "6:40 AM",
+                "entry": 300,
+                "exit": 241
+            }
+        ],
+        "2026-09-02": [
+            {
+                "id": "202609020",
+                "entry_time": "6:30 AM",
+                "exit_time": "6:35 AM",
+                "entry": 306,
+                "exit": 268
+            }
+        ],
+        "2026-09-08": [
+            {
+                "id": "202609080",
+                "entry_time": "6:30 AM",
+                "exit_time": "6:41 AM",
+                "entry": 485,
+                "exit": 520
+            }
+        ],
+        "2026-09-09": [
+            {
+                "id": "202609090",
+                "entry_time": "6:41 AM",
+                "exit_time": "7:24 AM",
+                "entry": 473,
+                "exit": 480
+            }
+        ],
+        "2026-09-10": [
+            {
+                "id": "202609100",
+                "entry_time": "6:31 AM",
+                "exit_time": "7:24 AM",
+                "entry": 614.64,
+                "exit": 613.34
+            }
+        ],
+        "2026-09-22": [
+            {
+                "id": "202609220",
+                "entry_time": "6:35 AM",
+                "exit_time": "7:22 AM",
+                "entry": 715.97,
+                "exit": 615.02
+            }
+        ],
+        "2026-09-24": [
+            {
+                "id": "202609240",
                 "entry_time": "6:30 AM",
                 "exit_time": "7:01 AM",
                 "entry": 589.64,
                 "exit": 607.35
-            },
+            }
+        ],
+        "2026-09-25": [
             {
-                "id":202609251,
-                "entry_time": "6:29 AM",
-                "exit_time": "7:22 AM",
-                "entry": 715.97,
-                "exit": 615.02
+                "id": "202609250",
+                "entry_time": "6:30 AM",
+                "exit_time": "7:00 AM",
+                "entry": 1254.64,
+                "exit": 1303.36
             }
         ]
     }

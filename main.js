@@ -25,6 +25,22 @@ function _(className) { return document.getElementsByClassName(className)[0]; }
  */
 function _a(className) { return document.getElementsByClassName(className); }
 
+function parseTimeString(timeString) {
+    const cleanStr = timeString.trim().toLowerCase();
+    const isPm = cleanStr.includes('pm');
+    const isAm = cleanStr.includes('am');
+    const timeOnly = cleanStr.replace(/(am|pm)/g, '').trim();
+    let [hours, minutes] = timeOnly.split(':').map(Number);
+    if (isPm && hours !== 12) {
+        hours += 12;
+    } if (isAm && hours === 12) {
+        hours = 0;
+    }
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+}
+
 async function fetchHTML(path) {
     try {
         const response = await fetch(path);
@@ -74,9 +90,14 @@ class CalModel extends EventTarget {
         return this.d.toLocaleString('default', { month: 'long' });
     }
     setMonth(num) {
-        if (this.getMonth() != num) {
+        if (this.getMonth() !== num) {
+            let oldDay = this.getDate();
             let oldY = this.getYear();
-            this.d.setMonth(num);
+            this.d.setDate(1);
+            this.d.setMonth(num + 1);
+            this.d.setDate(0);
+            let daysInMonth = this.getDate();
+            this.d.setDate(Math.min(oldDay, daysInMonth));
             this.dispatchChangeEvent(oldY != this.getYear(), true);
         }
     }
@@ -101,6 +122,9 @@ class CalModel extends EventTarget {
         const e = new CustomEvent("modelDateChanged", {detail: {yearChange, monthChange}})
         this.dispatchEvent(e);
     }
+    toISODateString() {
+        return this.d.toISOString().split("T")[0];
+    }
     toSlashString() {
         return `${this.getMonth()+1}/${this.getDate()}/${this.getYear()}`;
     }
@@ -108,42 +132,19 @@ class CalModel extends EventTarget {
         return this.d.toLocaleString('default', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 }
+
 let model = new CalModel();
+
 model.addEventListener("modelDateChanged", (e) => {
     if (e.detail.monthChange) $("calendar-month").textContent = model.getMonthName();
     if (e.detail.yearChange) $("calendar-year").textContent = model.getYear();
-    if (e.detail.monthChange || e.detail.yearChange) {
-        let selNum = getSelectedDate();
+    if (e.detail.monthChange || e.detail.yearChange) {;
         deselectDateCard();
         updateCalendar();
-        if (Number.isInteger(selNum)) {
-            let el = getDateCard(selNum);
-            selectDateCard(el);
-        }
+        let el = getDateCard(model.getDate());
+        selectDateCard(el);
     }
-    // console.log(`event fired ${e.detail}`)
-    // $("calendar-year").textContent = e.detail.newNum;
 });
-
-
-// let dayMapper = {
-//     Sunday:0,
-//     Monday:1,
-//     Tuesday:2,
-//     Wednesday:3,
-//     Thursday:4,
-//     Friday:5,
-//     Saturday:6
-// };
-// Object.keys(dayMapper).forEach((e, i, a) => {
-//     dayMapper[dayMapper[e]] = e;
-// });
-
-// function getMonthNumber(monthName) {
-//     const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-//     const searchName = monthName.toLowerCase().substring(0, 3); 
-//     return months.indexOf(searchName) + 1;
-// }
 
 function getDays(year, month) {
     const dayList = [];
@@ -176,14 +177,19 @@ function initializeCalendar() {
     model.initToDate(d);
     let el = getDateCard(model.getDate());
     selectDateCard(el);
+    updateCalendar();
 }
 
 function updateCalendar() {
     // console.log(model.getYear(), model.getMonth());
     const dayList = getDays(model.getYear(), model.getMonth());
+    let dTemp = new Date(model.getYear(), model.getMonth());
     // console.log(dayList);
     let countingUp = true;
     [..._a("date-card")].forEach(e => {
+        e.classList.remove("positive", "negative");
+        e.children[1].textContent = "";
+        e.children[2].textContent = "";
         if (dayList.length > 0) {
             let cNum = parseInt(e.id.replace("dcard", ""));
             //console.log(`card number ${cNum}`);
@@ -194,12 +200,32 @@ function updateCalendar() {
                     countingUp = false;
                 } else {
                     dayList.unshift(dayObj);
-                    e.classList.add("unused");
+                    e.classList.add(["unused"]);
                     e.childNodes[1].textContent = "";
                 }
             }
             if (!countingUp) {
-                e.childNodes[1].textContent = dayObj.number;
+                e.children[0].textContent = dayObj.number;
+                dTemp.setDate(dayObj.number);
+                let dKey = dTemp.toISOString().split("T")[0];
+                if (Object.hasOwn(dayAggregations, dKey)) {
+                    let val = dayAggregations[dKey].pGain;
+                    let valStr = val.toFixed(2) + "%";
+                    if (val >= 0) {
+                        valStr = "+" + valStr;
+                    }
+                    e.children[1].textContent = valStr;
+                    val = dayAggregations[dKey].dGain;
+                    valStr = val.toFixed(2);
+                    if (val >= 0) {
+                        e.classList.add("positive");
+                        valStr = "+$" + valStr;
+                    } else {
+                        e.classList.add("negative");
+                        valStr = valStr.replace("-", "-$");
+                    }
+                    e.children[2].textContent = valStr;
+                }
                 e.classList.remove(["unused"]);
             }
         } else {
@@ -210,46 +236,66 @@ function updateCalendar() {
 }
 
 let jsonRecord;
-let jsonLiveRecord;
 let recordEntryHTML;
 let blurOnEnter = (e) => {if (e.key === 'Enter') {e.target.blur();}};
+let dayAggregations = {};
 
 async function loadData() {
     recordEntryHTML = await fetchHTML("./scraps/record_row");
     jsonRecord = await fetchJSON("./record.json");
-    let dKey = model.d.toISOString().split("T")[0];
-    let tab = $("record-list").querySelector("tbody");
+    calcDayAggregates();
+    loadTradesByDate(model.d);
+}
+function calcDayAggregates() {
+    Object.keys(jsonRecord.trades).forEach((dKey) => {
+        dayAggregations[dKey] = {
+            "dGain":_calc_dGainForDate(dKey),
+            "pGain":_calc_pGainForDate(dKey) 
+        };
+    });
+}
+function _calc_dGainForDate(date) {
+    let sum = 0;
+    jsonRecord.trades[date].forEach((record) => {
+        sum += record.exit - record.entry;
+    });
+    return sum;
+}
+function _calc_pGainForDate(date) {
+    let posChanges = [];
+    jsonRecord.trades[date].forEach((record) => {
+        posChanges.push({
+            time:+parseTimeString(record.entry_time),
+            capChange:-record.entry
+        });
+        posChanges.push({
+            time:+parseTimeString(record.exit_time),
+            capChange:record.exit
+        });
+    });
+    //sort list by time
+    posChanges.sort((x, y) => x.time - y.time);
+    let capDelt = 0;
+    let minDelt = 0;
+    //step through list, assigning two variables above as needed
+    for (let i = 0; i < posChanges.length; i++) {
+        capDelt += posChanges[i].capChange;
+        minDelt = Math.min(minDelt, capDelt);
+    }
+    return ((minDelt-capDelt)/minDelt-1)*100;
+}
+function loadTradesByDate(date) {
+    let dKey = model.toISODateString();
     // console.log("date key is", dKey);
     // TODO calculate %-gain per day, put it
     //      in object, parallelize it with the view, etc.
-    if (Object.hasOwn(jsonRecord.trades, dKey)) {
-        jsonRecord.trades[dKey].forEach((e) => {
-            console.log(recordEntryHTML);
-            let rowElement = textToHTML(recordEntryHTML);
-            console.log(rowElement);
-            let cells = rowElement.querySelectorAll("td");
-            cells[0].textContent = e.id;
-            cells[1].firstElementChild.value = e.entry_time;
-            cells[2].firstElementChild.value = e.exit_time;
-            let entryNum = parseFloat(e.entry);
-            cells[3].firstElementChild.value = entryNum;
-            cells[3].firstElementChild.addEventListener("focus", (e) => stripInput(e.target));
-            cells[3].firstElementChild.addEventListener("blur", (e) => refreshRow(e.target.parentNode.parentNode));
-            cells[3].firstElementChild.addEventListener("keydown", blurOnEnter);
-            let exitNum = parseFloat(e.exit);
-            cells[4].firstElementChild.value = exitNum;
-            cells[4].firstElementChild.addEventListener("focus", (e) => stripInput(e.target));
-            cells[4].firstElementChild.addEventListener("blur", (e) => refreshRow(e.target.parentNode.parentNode));
-            cells[4].firstElementChild.addEventListener("keydown", blurOnEnter);
-            refreshRow(rowElement);
-            tab.appendChild(rowElement);
-        });
+    if (isObj(jsonRecord) && Object.hasOwn(jsonRecord.trades, dKey)) {
+        jsonRecord.trades[dKey].forEach((e) => recordTableAddRow(e));
     }
 }
-
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+    await loadData();
     initializeCalendar();
-    loadData();
     // loadFooter();
     // params = new URLSearchParams(window.location.search);
     // if (params.has('projectid')) {
@@ -267,11 +313,12 @@ $("calendar-month-button-right").addEventListener("click", () => {
 let selectionDateCard;
 
 function selectDateCard_eventHandle(e) {
-    selectDateCard(e.target);
+    if (selectionDateCard !== e.target) selectDateCard(e.currentTarget);
 }
 
 function selectDateCard(el) {
     if (!el.classList.contains(["unused"])) {
+        saveRows();
         deselectDateCard()
         el.classList.add("selected");
         selectionDateCard = el;
@@ -279,6 +326,8 @@ function selectDateCard(el) {
         model.setDate(selDay)
         _("short-date-label").textContent = model.toSlashString();
         $("record-date-label").textContent = model.toLongString();
+        clearRecordTable()
+        loadTradesByDate(model.d);
     }
 }
 
@@ -302,27 +351,42 @@ function getDateCard(num) {
     });
     return el;
 }
+
+/**
+ * TABLE FUNCTIONS
+ */
+function saveRows() {
+    document.querySelectorAll("tbody tr").forEach((row) => saveRow(row));
+}
 function saveRow(el) {
+    console.log("1/5 Saving");
     let cells = el.querySelectorAll("td");
     let id = cells[0].textContent;
-    let dKey = model.d.toISOString().split("T")[0];
+    console.log("2/5 Saving row with id", id);
+    let dKey = model.toISODateString();
+    console.log("3/5 Accessing record object at date", dKey);
     if (Object.hasOwn(jsonRecord.trades, dKey)) {
+        console.log("4/5 Found records in object under date");
         trades = jsonRecord.trades[dKey];
-        let changesMade = false;
         for (let i = 0; i < trades.length; i++) {
             let trade = trades[i];
+            console.log("row",i, "has id", trade.id);
             if (trade.id === id) {
+                console.log("5/5 Found record with matching id. Saving...");
                 trade.entry_time = cells[1].firstElementChild.value;
                 trade.exit_time = cells[2].firstElementChild.value;
-                trade.entry = cells[3].firstElementChild.value;
-                trade.exit = cells[4].firstElementChild.value;
-                changesMade = true;
+                trade.entry = +stripStr(cells[3].firstElementChild.value);
+                console.log("Saving entry", +stripStr(cells[3].firstElementChild.value));
+                trade.exit = +stripStr(cells[4].firstElementChild.value);
+                console.log("Saving exit", +stripStr(cells[4].firstElementChild.value));
                 break;
             }
         }
     }
 }
 function recalcRow(el) {
+    calcDayAggregates();
+    updateCalendar();
     let cells = el.querySelectorAll("td");
     const entryNum = +stripStr(cells[3].firstElementChild.value);
     const exitNum = +stripStr(cells[4].firstElementChild.value);
@@ -330,7 +394,6 @@ function recalcRow(el) {
     cells[6].textContent = ((exitNum/entryNum - 1)*100).toFixed(2);
 }
 function refreshRow(el) {
-    saveRow(el);
     recalcRow(el);
     let cells = el.querySelectorAll("td");
     stripInput(cells[3].firstElementChild);
@@ -365,10 +428,72 @@ function stripCell(cell) {
   cell.textContent = stripStr(cell.textContent);
 }
 
+function clearRecordTable() {
+    document.querySelector("tbody").innerHTML = "";
+}
+function recordTableAddRow(recordObj) {
+    // console.log(recordEntryHTML);
+    let rowElement = textToHTML(recordEntryHTML);
+    // console.log(rowElement);
+    let cells = rowElement.querySelectorAll("td");
+    cells[0].textContent = recordObj.id;
+    cells[1].firstElementChild.value = recordObj.entry_time;
+    cells[2].firstElementChild.value = recordObj.exit_time;
+    let entryNum = parseFloat(recordObj.entry);
+    cells[3].firstElementChild.value = entryNum;
+    cells[3].firstElementChild.addEventListener("focus", (e) => stripInput(e.target));
+    cells[3].firstElementChild.addEventListener("blur", (e) => { saveRow(e.target.parentNode.parentNode); refreshRow(e.target.parentNode.parentNode); });
+    cells[3].firstElementChild.addEventListener("keydown", blurOnEnter);
+    let exitNum = parseFloat(recordObj.exit);
+    cells[4].firstElementChild.value = exitNum;
+    cells[4].firstElementChild.addEventListener("focus", (e) => stripInput(e.target));
+    cells[4].firstElementChild.addEventListener("blur", (e) => { saveRow(e.target.parentNode.parentNode); refreshRow(e.target.parentNode.parentNode); });
+    cells[4].firstElementChild.addEventListener("keydown", blurOnEnter);
+    refreshRow(rowElement);
+    $("record-list").querySelector("tbody").appendChild(rowElement);
+}
 
+/** TABLE TOOL BAR FUNCTIONS */
+function recordIDExists(dKey, id) {
+    for (let i = 0; i < jsonRecord.trades[dKey].length; i++) {
+        if (jsonRecord.trades[dKey][i].id === ""+id) return true;
+    }
+    return false;
+}
 
-
-
+$("record-add-button").addEventListener("click", (e) => {
+    if (isObj(jsonRecord)) {
+        // get date for records key and id
+        let dKey = model.toISODateString();
+        // come up with an id
+        let newID = dKey.replaceAll("-", "") + "0";
+        // if there are no records for our date, we can skip the id checking
+        if (Object.hasOwn(jsonRecord.trades, dKey)) {
+            // check if id is in use - iterate if so
+            while (true) {
+                if (recordIDExists(dKey, newID)) {
+                    // console.log(newID);
+                    newID = ""+(+newID+1);
+                } else break;
+            }
+        } else {
+            // add a new list of trades under our date
+            jsonRecord.trades[dKey] = [];
+        }
+        // create new record object
+        let o = {
+            "id":newID,
+            "entry_time":"6:30 AM",
+            "exit_time":"6:30 AM",
+            "entry":0.00,
+            "exit":0.00
+        }
+        // add record to json
+        jsonRecord.trades[dKey].push(o);
+        // instantiate new row and add
+        recordTableAddRow(o);
+    }
+});
 
 
 
