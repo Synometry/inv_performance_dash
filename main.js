@@ -25,6 +25,16 @@ function _(className) { return document.getElementsByClassName(className)[0]; }
  */
 function _a(className) { return document.getElementsByClassName(className); }
 
+async function fetchJSON(path) {
+    try {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error(`Could not load HTML file at \'${path}\':`, error);
+    }
+}
+
 class CalModel extends EventTarget {
     constructor() {
         super();
@@ -70,6 +80,12 @@ class CalModel extends EventTarget {
         const e = new CustomEvent("modelDateChanged", {detail: {yearChange, monthChange}})
         this.dispatchEvent(e);
     }
+    toSlashString() {
+        return `${this.getMonth()+1}/${this.getDate()}/${this.getYear()}`;
+    }
+    toLongString() {
+        return this.d.toLocaleString('default', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
 }
 let model = new CalModel();
 model.addEventListener("modelDateChanged", (e) => {
@@ -79,7 +95,7 @@ model.addEventListener("modelDateChanged", (e) => {
         let selNum = getSelectedDate();
         deselectDateCard();
         updateCalendar();
-        if (selNum > 0) {
+        if (Number.isInteger(selNum)) {
             let el = getDateCard(selNum);
             selectDateCard(el);
         }
@@ -172,8 +188,15 @@ function updateCalendar() {
     });
 }
 
+let jsonRecord;
+
+async function loadData() {
+    jsonRecord = await fetchJSON("./record.json");
+}
+
 window.addEventListener('load', () => {
     initializeCalendar();
+    loadData();
     // loadFooter();
     // params = new URLSearchParams(window.location.search);
     // if (params.has('projectid')) {
@@ -199,6 +222,10 @@ function selectDateCard(el) {
         deselectDateCard()
         el.classList.add("selected");
         selectionDateCard = el;
+        let selDay = getSelectedDate();
+        model.setDate(selDay)
+        _("short-date-label").textContent = model.toSlashString();
+        $("record-date-label").textContent = model.toLongString();
     }
 }
 

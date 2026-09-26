@@ -10,7 +10,7 @@
 <body class="fc">
     <div id="header">
     </div>
-    <div id="content">
+    <div id="content" class="fc">
         <div id="calendar">
             <div id="calendar-header" class="fc">
                 <div id="calendar-header-year" class="fr">
@@ -33,6 +33,63 @@
                 <div class="date-card">
                     <p class="date-card-date"></p>
                 </div>
+            </div>
+        </div>
+        <div id="record-panel" class="fc">
+            <p id="record-date-label">date label text</p>
+            <div id="record-toolbar" class="fr">
+                <p id="record-list-header">Trades on <span class="short-date-label"></span>:</p>
+                <button id="record-add-button">Add Trade</button>
+                <button id="record-edit-button">Edit Trade</button>
+                <button>Delete Trade</button>
+            </div>
+            <div id="record-list" class="fc">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Entry Time</th>
+                            <th>Exit Time</th>
+                            <th>Entry</th>
+                            <th>Exit</th>
+                            <th>Gain ($)</th>
+                            <th>Gain (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>6:30:00 AM</td>
+                            <td>7:01:00 AM</td>
+                            <td class="currency">589.64</td>
+                            <td class="currency">607.35</td>
+                            <td class="currency positive">17.71</td>
+                            <td class="percent positive">3.00</td>
+                        </tr>
+                        <tr>
+                            <td>6:29:00 AM</td>
+                            <td>7:22:00 AM</td>
+                            <td class="currency">715.97</td>
+                            <td class="currency">615.02</td>
+                            <td class="currency negative">100.00</td>
+                            <td class="percent negative">14.10</td>
+                        </tr>
+                        <tr>
+                            <td>6:30:00 AM</td>
+                            <td>7:01:00 AM</td>
+                            <td class="currency">589.64</td>
+                            <td class="currency">607.35</td>
+                            <td class="currency positive">17.71</td>
+                            <td class="percent positive">3.00</td>
+                        </tr>
+                        <tr>
+                            <td>6:29:00 AM</td>
+                            <td>7:22:00 AM</td>
+                            <td class="currency">715.97</td>
+                            <td class="currency">615.02</td>
+                            <td class="currency negative">100.00</td>
+                            <td class="percent negative">14.10</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

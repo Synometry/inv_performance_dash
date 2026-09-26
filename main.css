@@ -10,9 +10,27 @@
     display: flex;
     flex-direction: row;
 }
+table {
+    border-collapse: collapse;
+}
 body {
-    background-color: #0a0a0a;
+    height: 100dvh;
+    margin: 0;
+    padding: 0px;
+    background-color: hsl(0 0% 9% / 1);;
+}
+#content {
+    flex: 1;
+}
 
+/* CALENDAR */
+
+#calendar {
+    margin: 8px;
+    padding: 9px;
+    background-color: #0a0a0a;
+    border-radius: 20px;
+    box-shadow: inset 0px 0px 20px 17px black;
 }
 #calendar-header {
     margin-bottom: 20px;
@@ -47,12 +65,14 @@ h3 {
 }
 #calendar-dategrid {
     display: grid;
-    grid-template-columns: auto auto auto auto auto auto auto;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 .weekday-header {
     font-size: small;
     margin: 2px;
     text-align: center;
+    min-width: 0;
+    /* // width: 50px; */
 }
 .date-card {
     position: relative;
@@ -60,7 +80,7 @@ h3 {
     border: 2px solid hsl(216, 100%, 35%);
     border-radius: 5px;
     aspect-ratio: 1;
-    background-color: rgb(24, 31, 49);
+    background-color: hsl(252 31% 7% / 1);
     padding: 2px;
 }
 .date-card.unused {
@@ -78,4 +98,91 @@ h3 {
     margin: 0;
     color: rgb(210,210,210);
     font-size: small;
+}
+
+/* RECORDS */
+#record-panel {
+    flex: 1;
+    margin: 8px;
+}
+#record-date-label {
+    margin: 0px;
+    margin-left: 10px;
+    font-weight: bolder;
+    font-size: 20px;
+    text-transform: Capitalize;
+}
+#record-toolbar {
+    margin-top: 0;
+    align-items: center;
+    justify-content: end;
+    border-top: 3px solid hsl(216, 30%, 35%);
+    border-top-right-radius: 20px;
+    background-color: #0a0a0a;
+    overflow: hidden;
+}
+#record-toolbar>* {
+    margin: 0px;
+    padding: 20px 10px;
+    background-color: hsl(216, 30%, 35%);
+    border: none;
+    font-size: small;
+    font-weight: 600;
+}
+#record-toolbar>p {
+    border-bottom-left-radius: 30px;
+    text-align: center;
+    width: 150px;
+}
+#record-toolbar>button {
+    cursor: pointer;
+}
+#record-toolbar>button:hover {
+    background-color: hsl(209, 30%, 45%);
+}
+#record-list {
+    flex: 1;
+    padding-top: 9px;
+    background-color: #0a0a0a;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    /* box-shadow: inset 0px 0px 20px 17px black; */
+}
+#record-list th {
+    border-bottom: 2px solid hsl(216, 100%, 35%);
+}
+#record-list th, #record-list tr {
+    font-size: 12px;
+    font-weight: normal;
+}
+td {
+    padding: 7px;
+    text-align: center;
+}
+td.currency, td.percent {
+    text-align: right;
+}
+td.currency::before {
+    content: "$";
+}
+td.percent::after {
+    content: "%";
+}
+td.positive {
+    color: lightgreen;
+}
+td.negative::before {
+    content: "-";
+}
+td.negative.currency::before {
+    content: "-$";
+}
+td.negative {
+    color:red;
+}
+tbody tr:nth-child(2n-1) {
+    background-color: hsl(254, 20%, 12%);
+}
+tbody tr:hover {
+    box-shadow: inset -10px 0px 0px 0px hsl(216, 100%, 35%), inset 10px 0px 0px 0px hsl(216, 100%, 35%);
 }
