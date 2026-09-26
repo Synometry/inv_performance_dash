@@ -25,14 +25,35 @@ function _(className) { return document.getElementsByClassName(className)[0]; }
  */
 function _a(className) { return document.getElementsByClassName(className); }
 
+async function fetchHTML(path) {
+    try {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.text();
+    } catch (error) {
+        console.error(`Could not load HTML file at \'${path}\':`, error);
+    }
+}
+
 async function fetchJSON(path) {
     try {
         const response = await fetch(path);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();
     } catch (error) {
-        console.error(`Could not load HTML file at \'${path}\':`, error);
+        console.error(`Could not load JSON file at \'${path}\':`, error);
     }
+}
+
+/**
+ * @param {string} text
+ * @returns {Element}
+ **/
+function textToHTML(text) {
+    const temp = document.createElement("template");
+    temp.innerHTML = text;
+    // console.log(temp.content.firstChild);
+    return temp.content.firstChild;
 }
 
 class CalModel extends EventTarget {
@@ -189,9 +210,41 @@ function updateCalendar() {
 }
 
 let jsonRecord;
+let jsonLiveRecord;
+let recordEntryHTML;
+let blurOnEnter = (e) => {if (e.key === 'Enter') {e.target.blur();}};
 
 async function loadData() {
+    recordEntryHTML = await fetchHTML("./scraps/record_row");
     jsonRecord = await fetchJSON("./record.json");
+    let dKey = model.d.toISOString().split("T")[0];
+    let tab = $("record-list").querySelector("tbody");
+    // console.log("date key is", dKey);
+    // TODO calculate %-gain per day, put it
+    //      in object, parallelize it with the view, etc.
+    if (Object.hasOwn(jsonRecord.trades, dKey)) {
+        jsonRecord.trades[dKey].forEach((e) => {
+            console.log(recordEntryHTML);
+            let rowElement = textToHTML(recordEntryHTML);
+            console.log(rowElement);
+            let cells = rowElement.querySelectorAll("td");
+            cells[0].textContent = e.id;
+            cells[1].firstElementChild.value = e.entry_time;
+            cells[2].firstElementChild.value = e.exit_time;
+            let entryNum = parseFloat(e.entry);
+            cells[3].firstElementChild.value = entryNum;
+            cells[3].firstElementChild.addEventListener("focus", (e) => stripInput(e.target));
+            cells[3].firstElementChild.addEventListener("blur", (e) => refreshRow(e.target.parentNode.parentNode));
+            cells[3].firstElementChild.addEventListener("keydown", blurOnEnter);
+            let exitNum = parseFloat(e.exit);
+            cells[4].firstElementChild.value = exitNum;
+            cells[4].firstElementChild.addEventListener("focus", (e) => stripInput(e.target));
+            cells[4].firstElementChild.addEventListener("blur", (e) => refreshRow(e.target.parentNode.parentNode));
+            cells[4].firstElementChild.addEventListener("keydown", blurOnEnter);
+            refreshRow(rowElement);
+            tab.appendChild(rowElement);
+        });
+    }
 }
 
 window.addEventListener('load', () => {
@@ -237,7 +290,7 @@ function deselectDateCard() {
 }
 function getSelectedDate() {
     if (isObj(selectionDateCard)) {
-        return parseInt(selectionDateCard.childNodes[1].textContent);
+        return parseInt(selectionDateCard.firstElementChild.textContent);
     }
 }
 
@@ -248,4 +301,67 @@ function getDateCard(num) {
         if (parseInt(e.childNodes[1].textContent) === num) el = e;
     });
     return el;
+}
+function saveRow(el) {
+    let cells = el.querySelectorAll("td");
+    let id = cells[0].textContent;
+    let dKey = model.d.toISOString().split("T")[0];
+    if (Object.hasOwn(jsonRecord.trades, dKey)) {
+        trades = jsonRecord.trades[dKey];
+        let changesMade = false;
+        for (let i = 0; i < trades.length; i++) {
+            let trade = trades[i];
+            if (trade.id === id) {
+                trade.entry_time = cells[1].firstElementChild.value;
+                trade.exit_time = cells[2].firstElementChild.value;
+                trade.entry = cells[3].firstElementChild.value;
+                trade.exit = cells[4].firstElementChild.value;
+                changesMade = true;
+                break;
+            }
+        }
+        // save
+    }
+}
+function recalcRow(el) {
+    let cells = el.querySelectorAll("td");
+    const entryNum = +stripStr(cells[3].firstElementChild.value);
+    const exitNum = +stripStr(cells[4].firstElementChild.value);
+    cells[5].textContent = (exitNum - entryNum).toFixed(2);
+    cells[6].textContent = ((exitNum/entryNum - 1)*100).toFixed(2);
+}
+function refreshRow(el) {
+    saveRow(el);
+    recalcRow(el);
+    let cells = el.querySelectorAll("td");
+    stripInput(cells[3].firstElementChild);
+    cells[3].firstElementChild.value = "$"+(+cells[3].firstElementChild.value).toFixed(2);
+    stripInput(cells[4].firstElementChild);
+    cells[4].firstElementChild.value = "$"+(+cells[4].firstElementChild.value).toFixed(2);
+    stripCell(cells[5]);
+    let dGainVal = +cells[5].textContent;
+    if (dGainVal>=0) {
+        cells[5].classList.add(["positive"]);
+        cells[5].textContent = "$"+dGainVal.toFixed(2);
+    } else {
+        cells[5].classList.add(["negative"]);
+        cells[5].textContent = dGainVal.toFixed(2).replace("-", "-$");
+    }
+    stripCell(cells[6]);
+    let pGainVal = +cells[6].textContent;
+    if (pGainVal>=0) {
+        cells[6].classList.add(["positive"]);
+    } else {
+        cells[6].classList.add(["negative"]);
+    }
+    cells[6].textContent = pGainVal.toFixed(2)+"%";
+}
+function stripStr(text) {
+    return text.replace(/[^\d.-]/g, '');
+}
+function stripInput(cell) {
+  cell.value = stripStr(cell.value);
+}
+function stripCell(cell) {
+  cell.textContent = stripStr(cell.textContent);
 }

@@ -1,5 +1,21 @@
 {
-    "trades": [
-        
-    ]
+    "initial_balance":2000,
+    "trades": {
+        "2026-09-25": [
+            {
+                "id":202609250,
+                "entry_time": "6:30 AM",
+                "exit_time": "7:01 AM",
+                "entry": 589.64,
+                "exit": 607.35
+            },
+            {
+                "id":202609251,
+                "entry_time": "6:29 AM",
+                "exit_time": "7:22 AM",
+                "entry": 715.97,
+                "exit": 615.02
+            }
+        ]
+    }
 }
