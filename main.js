@@ -320,7 +320,6 @@ function saveRow(el) {
                 break;
             }
         }
-        // save
     }
 }
 function recalcRow(el) {
@@ -365,3 +364,28 @@ function stripInput(cell) {
 function stripCell(cell) {
   cell.textContent = stripStr(cell.textContent);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+$("download-button").addEventListener("click", () => {
+  const jsonString = JSON.stringify(jsonRecord, null, 4);
+  const b = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(b);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "record.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
